@@ -1,0 +1,673 @@
+\documentclass[12pt, a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{xeCJK}
+\setCJKmainfont{WenQuanYi Zen Hei}
+\setCJKsansfont{WenQuanYi Zen Hei}
+\setCJKmonofont{WenQuanYi Zen Hei}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{mathtools}
+
+\usepackage[a4paper, left=2.8cm, right=2.8cm, top=2.8cm, bottom=3.2cm]{geometry}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{microtype}
+\usepackage{parskip}
+
+\usepackage[table, x11names]{xcolor}
+\usepackage[most]{tcolorbox}
+
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage[hidelinks, unicode=true]{hyperref}
+\setlength{\headheight}{15pt}
+
+% ── Colors ──────────────────────────────────────────────────
+\definecolor{physblue}{RGB}{25,90,170}
+\definecolor{mathgreen}{RGB}{20,110,60}
+\definecolor{keyred}{RGB}{160,30,30}
+\definecolor{lightblue}{RGB}{220,235,255}
+\definecolor{lightgreen}{RGB}{220,245,225}
+\definecolor{lightyellow}{RGB}{255,250,215}
+\definecolor{lightorange}{RGB}{255,232,205}
+
+% ── Boxes ───────────────────────────────────────────────────
+\newtcolorbox{physicsbox}{
+  enhanced, title={物理類比},
+  colback=lightblue, colframe=physblue,
+  colbacktitle=physblue, fonttitle=\bfseries\color{white},
+  arc=3pt, boxrule=0.8pt
+}
+\newtcolorbox{keybox}{
+  enhanced, title={關鍵結果},
+  colback=lightorange, colframe=keyred,
+  colbacktitle=keyred, fonttitle=\bfseries\color{white},
+  arc=3pt, boxrule=0.8pt
+}
+\newtcolorbox{mathbox}{
+  enhanced, title={數學},
+  colback=lightgreen, colframe=mathgreen,
+  colbacktitle=mathgreen, fonttitle=\bfseries\color{white},
+  arc=3pt, boxrule=0.8pt
+}
+\newtcolorbox{intuitionbox}{
+  enhanced, title={直覺},
+  colback=lightyellow, colframe=orange!80!black,
+  colbacktitle=orange!80!black, fonttitle=\bfseries\color{white},
+  arc=3pt, boxrule=0.8pt
+}
+
+% ── Section formatting ───────────────────────────────────────
+\titleformat{\section}[block]
+  {\large\bfseries\color{physblue}}{\thesection}{0.8em}{}
+  [\vspace{-0.2em}\color{physblue}\rule{\textwidth}{0.4pt}]
+\titleformat{\subsection}[block]
+  {\normalsize\bfseries}{\thesubsection}{0.8em}{}
+
+% ── Header/footer ────────────────────────────────────────────
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{gray}Zhu (2011) VIX Futures 帶讀講義}
+\fancyhead[R]{\small\color{gray}\leftmark}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% ── Theorem environments ─────────────────────────────────────
+\newtheorem{proposition}{命題}
+\theoremstyle{remark}
+\newtheorem*{remark}{注記}
+
+% ── Macros ───────────────────────────────────────────────────
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\dd}{\mathrm{d}}
+\newcommand{\VIX}{\mathrm{VIX}}
+
+% ════════════════════════════════════════════════════════════
+\begin{document}
+
+% ── Title page ───────────────────────────────────────────────
+\begin{titlepage}
+\centering
+\vspace*{2.5cm}
+
+{\Huge\bfseries\color{physblue} VIX 期貨解析公式\\帶讀講義}
+
+\vspace{0.6em}
+{\large\color{gray}一位物理系學生的閱讀筆記}
+
+\vspace{2em}
+{\large Zhu, S.-B.\ (2011).}\\
+\vspace{0.2em}
+{\normalsize An analytical formula for VIX futures and its applications.}\\
+{\small\itshape Journal of Futures Markets, 31(6), 547--571.}
+
+\vspace{3.5em}
+
+\begin{tcolorbox}[enhanced, width=0.85\textwidth,
+  colback=lightblue, colframe=physblue, arc=5pt]
+\centering
+\textbf{閱讀方式}\\[0.4em]
+\begin{itemize}[leftmargin=1.5em, topsep=0pt]
+  \item 每節讀完後能用自己的話解釋主要概念再往下走
+  \item 遇到看不懂的公式，先讀旁邊的「物理類比」框
+  \item 橘色「關鍵結果」框是全文最重要的內容
+\end{itemize}
+\end{tcolorbox}
+
+\vspace{3em}
+{\normalsize 2026 年 5 月}
+\vfill
+\end{titlepage}
+
+\tableofcontents
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section*{前言：閱讀地圖}
+\addcontentsline{toc}{section}{前言：閱讀地圖}
+
+這篇論文只問一個問題：
+
+\begin{center}
+\textit{「VIX 期貨的公平價值是多少？」}
+\end{center}
+
+數學上就是求 $F^{\VIX}(t,T)$——在 $t$ 時刻，到期日為 $T$ 的 VIX 期貨價格。
+
+\textbf{為什麼難？}
+\begin{itemize}
+  \item VIX 是由 S\&P500 選擇權算出來的衍生性商品
+  \item VIX 期貨又是 VIX 的衍生性商品——衍生品的衍生品
+  \item 定價公式裡有 $\sqrt{\cdots}$，開根號讓解析計算非常困難
+\end{itemize}
+
+\textbf{Zhu (2011) 的答案：}在「隨機波動率＋跳躍（SVJJ）」模型下，VIX 期貨可以寫成一個\textbf{一維實值積分}，快速又精確。
+
+\vspace{0.5em}
+\textbf{邏輯主線：}
+\begin{center}
+VIX 直覺
+$\;\to\;$ SDE 工具
+$\;\to\;$ SVJJ 模型
+$\;\to\;$ $\VIX^2 = aV_t + b$
+$\;\to\;$ 解析公式
+$\;\to\;$ 凸性誤差與實證
+\end{center}
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{背景：讀論文前先搞懂這三件事}
+
+\subsection{VIX 是什麼？}
+
+\begin{physicsbox}
+把股票市場想成一鍋氣體，股價 $S_t$ 是氣體分子的位置，每日漲跌幅是分子的速度。
+
+\textbf{VIX = 這鍋氣體的「溫度」}——衡量未來 30 天，市場預期股價震盪的程度。
+
+VIX 高 $\Rightarrow$ 市場混亂，大幅震盪（2008 年金融海嘯時曾達 89）。\\
+VIX 低 $\Rightarrow$ 市場平靜，小幅移動（2006--2007 年曾低至 12）。
+
+關鍵差異：物理溫度測量\textbf{過去}的運動；VIX 是從當下選擇權市價推算市場對\textbf{未來}的預期。
+\end{physicsbox}
+
+\vspace{0.5em}
+
+\textbf{VIX 的正式定義（eq 1）：}
+
+CBOE 用一籃子 S\&P500 選擇權（不依賴任何特定模型）計算：
+\begin{equation}
+  \VIX_t^2 \;=\; -\frac{2}{\bar{T}}\,\E^{\Q}_t\!\left[\ln\frac{F_{t,\bar{T}}}{S_t}\right]
+  \tag{eq 1}
+\end{equation}
+
+\begin{itemize}
+  \item $\bar{T} = 30/365$：VIX 的標準計算期間（30 天）
+  \item $\E^\Q_t[\,\cdot\,]$：風險中性測度 $\Q$ 下，以 $t$ 時刻資訊為條件的期望值
+  \item $F_{t,\bar{T}}$：S\&P500 在 $t$ 時刻的 $\bar{T}$ 期遠期價格
+\end{itemize}
+
+\begin{intuitionbox}
+$-\E^\Q[\ln(F/S)]$ 叫做 \textbf{log-contract 的期望值}，等價於對所有 OTM（out-of-the-money）選擇權加權求和，這就是 CBOE 的實際計算方式。結果量綱是方差（\%$^2$），所以 VIX 取平方根再乘 100，單位是 \%。
+
+VIX = 20 的意思：市場預期 S\&P500 未來一年的年化波動率約為 20\%，換算成月：$20/\sqrt{12} \approx 5.8\%$。
+\end{intuitionbox}
+
+\subsection{VIX 期貨是什麼？}
+
+VIX 期貨於 2004 年 3 月在 CBOE 推出，標的物是 VIX 本身（不是 S\&P500）。
+
+由 no-arbitrage 條件，到期日為 $T$ 的 VIX 期貨公平交割價：
+\begin{equation}
+  F^{\VIX}(t, T) = 100 \times \E^\Q_t\!\left[\VIX_T\right]
+  \tag{定義}
+\end{equation}
+
+\begin{physicsbox}
+\textbf{期貨價格 = 對未來現貨的「最佳猜測」（風險中性測度下）。}
+
+因為波動率（VIX）是 mean-reverting 的——就像溫度會回歸平均值——遠期 VIX 期貨的價格會往長期均值靠攏，而不是追著現在的 VIX 跑。這就產生了 VIX 期貨的期限結構（term structure）：
+\begin{itemize}
+  \item VIX 現在很低（$<15$）$\Rightarrow$ 遠月期貨往上（contango）
+  \item VIX 現在很高（$>30$）$\Rightarrow$ 遠月期貨往下（backwardation）
+\end{itemize}
+\end{physicsbox}
+
+\subsection{論文要解決什麼問題？}
+
+$F^{\VIX}(t,T) = 100\,\E^\Q_t[\VIX_T]$ 這個公式看起來簡單，但 $\VIX_T = \sqrt{\cdots}$——開根號讓解析計算無法直接進行。
+
+\begin{keybox}
+\textbf{論文的三大貢獻（Introduction）：}
+\begin{enumerate}
+  \item \textbf{解析定價公式}：在 SVJJ 模型下給出一維實值積分公式（eq 8--9），比近似方法精確，比二維 Fourier 反演更快。
+  \item \textbf{凸性修正誤差分析}：證明 Lin (2007) 和 Zhang et al. (2010) 的 Taylor 展開近似在高波動率環境下誤差顯著（Figure 1）。
+  \item \textbf{實證研究}：用 2004--2008 年 CBOE 資料，比較 SV / SVJ / SVVJ / SVJJ 四個模型，採用 MCMC 估計參數。
+\end{enumerate}
+\end{keybox}
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{數學工具箱}
+
+\subsection{隨機微分方程（SDE）}
+
+\begin{physicsbox}
+\textbf{物理起源：朗之萬方程式（Langevin, 1908）}
+
+描述液體中布朗粒子的速度 $v(t)$：
+\[
+  m\dot{v} = -\gamma v + F_{\text{random}}(t)
+\]
+金融學家把同樣的想法用在股價上，得到幾何布朗運動（GBM）：
+\[
+  \dd S_t = \mu S_t\,\dd t + \sigma S_t\,\dd W_t
+\]
+$W_t$ 是 Wiener 過程（標準布朗運動），增量 $W_{t+h}-W_t \sim N(0,h)$。
+\end{physicsbox}
+
+\textbf{伊藤引理（Itô's Lemma）的關鍵規則：}
+
+隨機微積分多了一條普通微積分沒有的規則：
+\[
+  (\dd W_t)^2 = \dd t,\quad (\dd t)(\dd W_t) = 0,\quad (\dd t)^2 = 0
+\]
+這讓我們能對隨機過程的函數做微分，是後面推導 VIX 公式的基礎。
+
+\subsection{均值回歸過程（CIR 模型）}
+
+論文中的核心隨機過程是描述\textbf{瞬時方差} $V_t$ 的 CIR 過程：
+
+\begin{equation}
+  \dd V_t = \kappa^\Q(\theta^\Q - V_t)\,\dd t + \sigma_V\sqrt{V_t}\,\dd W_t^{\Q,V}
+  \label{eq:cir}
+\end{equation}
+
+\begin{physicsbox}
+\textbf{物理類比：粒子在拋物線勢阱中的布朗運動}
+
+把 $V_t$ 想成一顆粒子的位置，勢能為 $U(V) = \tfrac{1}{2}\kappa^\Q(V-\theta^\Q)^2$（拋物線，就像諧振子）。
+
+\begin{itemize}
+  \item $\kappa^\Q(\theta^\Q - V_t)\,\dd t$：回復力，把粒子拉回平衡點 $\theta^\Q$
+  \item $\sigma_V\sqrt{V_t}\,\dd W$：隨機熱噪音（噪音強度隨 $V$ 變化）
+\end{itemize}
+
+參數意義：
+\begin{itemize}
+  \item $\theta^\Q$：長期均值（平衡位置），波動率最終回歸到這裡
+  \item $\kappa^\Q$：回歸速度（「彈力常數」），越大表示回歸越快
+  \item $\sigma_V$：波動率的波動率（vol of vol），噪音強度
+\end{itemize}
+
+Feller 條件 $2\kappa^\Q\theta^\Q > \sigma_V^2$ 保證 $V_t$ 不掉到 0 以下（方差不能是負的）。
+\end{physicsbox}
+
+\subsection{動差生成函數（MGF）}
+
+\begin{physicsbox}
+\textbf{物理對應：統計力學的配分函數}
+
+統計力學的配分函數 $Z(\beta) = \sum_i e^{-\beta E_i}$ 把所有能量信息壓縮進一個函數。MGF 做的是同樣的事：
+\[
+  \phi_X(u) = \E[e^{uX}]
+  = \sum_{n=0}^\infty \frac{u^n}{n!}\,\E[X^n]
+\]
+對 $u$ 求 $n$ 次導再取 $u=0$，就得到第 $n$ 個動差 $\E[X^n]$。
+
+特徵函數 $\psi_X(k)=\E[e^{ikX}]$ 是 MGF 的虛數版，等同於把機率密度函數做傅立葉轉換。
+\end{physicsbox}
+
+\textbf{Affine 模型的特殊性：}
+
+CIR 過程（更一般地說，affine 擴散）的 MGF 有閉式表達：
+\[
+  \E^\Q_t[e^{uV_T}] = \exp\!\big(C(\tau, u) + D(\tau, u)\cdot V_t\big)
+\]
+其中 $\tau = T-t$，$C$ 和 $D$ 滿足 Riccati 常微分方程。這是 Duffie--Pan--Singleton (2000) affine 定價框架的核心。
+
+知道了 $\E[e^{uV_T}]$，就可以用積分變換算出 $\E[f(V_T)]$——包括 $f(V) = \sqrt{aV+b}$（VIX 期貨定價的核心）。
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{論文核心：SVJJ 模型與解析公式}
+
+\subsection{SVJJ 模型（Section 2.2，eq 3--4）}
+
+SVJJ = Stochastic Volatility with Simultaneous Jumps in price and variance（隨機波動率加雙跳躍）。
+
+\textbf{股價 SDE（eq 3），風險中性測度 $\Q$ 下：}
+\begin{equation}
+  \frac{\dd S_t}{S_t}
+  = (r - \lambda^\Q\bar\mu^\Q_S)\,\dd t
+  + \sqrt{V_t}\,\dd W_t^{\Q,S}
+  + \dd J_t^S
+  \tag{eq 3}
+\end{equation}
+
+\textbf{方差 SDE（eq 4）：}
+\begin{equation}
+  \dd V_t
+  = \kappa^\Q(\theta^\Q - V_t)\,\dd t
+  + \sigma_V\sqrt{V_t}\,\dd W_t^{\Q,V}
+  + \dd J_t^V
+  \tag{eq 4}
+\end{equation}
+
+\begin{itemize}
+  \item $r$：無風險利率
+  \item $\lambda^\Q$：跳躍到達頻率（Poisson intensity）
+  \item $\dd J_t^S$, $\dd J_t^V$：股價跳躍與方差跳躍（同時發生）
+  \item $\bar\mu^\Q_S$：跳躍的平均幅度（確保期望收益率 = $r$）
+\end{itemize}
+
+\begin{physicsbox}
+\textbf{跳躍過程 = Poisson 放射性衰變}
+
+想像一個放射性原子核隨時可能「衰變」。Poisson 計數過程 $N_t$ 滿足：
+\[
+  P(\dd N_t = 1) = \lambda^\Q\,\dd t + O((\dd t)^2)
+\]
+在股票市場，「衰變」對應市場崩潰（crash）——突發的大幅跳動。每次跳躍同時改變股價（$J^S$）和方差（$J^V$）——這就是「Simultaneous Jump」的含義。
+\end{physicsbox}
+
+\textbf{SVJJ 的巢狀模型：}
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+模型 & 隨機波動 & 股價跳躍 & 方差跳躍 \\
+\midrule
+SV（Heston） & $\checkmark$ & & \\
+SVJ & $\checkmark$ & $\checkmark$ & \\
+SVVJ & $\checkmark$ & & $\checkmark$ \\
+SVJJ（完整） & $\checkmark$ & $\checkmark$ & $\checkmark$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{關鍵橋樑：$\VIX^2 = aV_t + b$（eq 5）}
+
+\begin{keybox}
+\textbf{關鍵結構（eq 5）：}在 SVJJ 模型下，$t$ 時刻的 VIX 平方是瞬時方差 $V_t$ 的\textbf{線性函數}：
+\begin{equation}
+  \VIX_t^2 = a\cdot V_t + b
+  \tag{eq 5}
+\end{equation}
+其中常數 $a>0$ 和 $b$ 由模型參數（$\kappa^\Q, \theta^\Q, \sigma_V$、跳躍參數）和 $\bar{T}$ 決定（eq 6）。
+\end{keybox}
+
+\textbf{為什麼成立？}
+
+將 VIX 定義（eq 1）代入 SVJJ 模型。$\VIX_t^2$ 等於未來 $\bar{T}$ 期間累積方差的期望值（加跳躍修正）：
+\[
+  \VIX_t^2
+  = \frac{1}{\bar{T}}\,\E^\Q_t\!\left[\int_t^{t+\bar{T}} V_s\,\dd s\right] + \text{（跳躍項）}
+\]
+
+對 CIR 過程，積分的期望值有解析解：
+\[
+  \E^\Q_t\!\left[\int_t^{t+\bar{T}} V_s\,\dd s\right]
+  = \underbrace{\frac{1-e^{-\kappa^\Q\bar{T}}}{\kappa^\Q}}_{\displaystyle a\cdot\bar{T}}\,V_t
+  + \theta^\Q\!\left(\bar{T} - \frac{1-e^{-\kappa^\Q\bar{T}}}{\kappa^\Q}\right)
+\]
+
+結果\textbf{對 $V_t$ 是線性的}。跳躍修正項也是線性或常數，所以最終 $\VIX_t^2 = aV_t + b$。
+
+\begin{physicsbox}
+\textbf{物理類比：諧振子的時間平均能量}
+
+在 OU 過程（線性 SDE）中，粒子的時間平均位移平方 $\langle x^2\rangle_{[0,T]}$ 的期望值，對現在位置 $x_0$ 是線性的。
+
+$a$ 反映現在的 $V_t$ 對未來平均的影響（「現在狀態的記憶」），$b$ 是無論現在狀態如何都存在的背景（來自長期均值 $\theta^\Q$ 和跳躍）。
+
+這個線性結構源自 SDE 的\textbf{仿射（affine）性}——正是讓整個定價問題可解的核心條件。
+\end{physicsbox}
+
+\textbf{為什麼這個線性關係這麼重要？}
+
+因為它把問題從「VIX$_T$ 的複雜函數的期望值」化簡成：
+\[
+  F^{\VIX}(t,T)
+  = 100\,\E^\Q_t\!\left[\VIX_T\right]
+  = 100\,\E^\Q_t\!\left[\sqrt{aV_T + b}\right]
+\]
+——只涉及 $V_T$ 的函數，而 $V_T$ 的 MGF 有閉式表達。
+
+\subsection{Proposition 1：解析定價公式（eq 7--11）}
+
+\subsubsection*{積分表示（eq 8--9）}
+
+利用以下對任意 $x > 0$ 成立的積分恆等式（Laplace 變換）：
+\[
+  \sqrt{x} = \frac{1}{\sqrt{\pi}}\int_0^\infty u^{-1/2}\,e^{-xu}\,\dd u
+  \quad\text{（差一個常數，精確形式見論文）}
+\]
+
+取期望值並交換積分與期望（在 SVJJ 模型的適當條件下成立），得到：
+
+\begin{keybox}
+\textbf{Proposition 1（eq 8--9）：}
+\begin{equation}
+  F^{\VIX}(t,T)
+  = \frac{100}{\pi}\int_0^\infty u^{-1/2}\,e^{-bu}\cdot\varphi(-au,\,V_t,\,\tau)\,\dd u
+  \tag{eq 8--9}
+\end{equation}
+其中 $\tau = T-t$，$\varphi(u, V_t, \tau) = \E^\Q_t[e^{uV_T}]$ 是 $V_T$ 的條件 MGF（eq 10）：
+\begin{equation}
+  \varphi(u, V_t, \tau) = \exp\!\Big(C(\tau,u) + D(\tau,u)\cdot V_t + A(\tau,u)\Big)
+  \tag{eq 10}
+\end{equation}
+$C, D, A$ 滿足 Riccati ODE（eq 11，詳見附錄 A）。
+\end{keybox}
+
+\begin{physicsbox}
+\textbf{物理類比：路徑積分的傳播子}
+
+$\varphi(u, V_t, \tau) = \E[e^{uV_T}]$ 在物理上對應量子力學的傳播子（propagator）或統計力學的配分函數。
+
+Affine 模型的神奇之處：即使 $V_t$ 有均值回歸、有跳躍，其 MGF 仍然可以寫成 $\exp(\text{線性}+\text{常數})$ 的指數仿射形式——就像量子諧振子的傳播子有閉式解。
+
+$C$ 和 $D$ 的 Riccati ODE 類似於 Hamilton--Jacobi 方程的特殊形式。
+\end{physicsbox}
+
+\subsubsection*{為什麼說這比其他方法好？}
+
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+方法 & 積分維度 & 被積函數 & 備注 \\
+\midrule
+\textbf{Zhu (2011)} & \textbf{一維} & \textbf{實值} & 本論文 \\
+Taylor 近似（Lin 2007 等） & 無積分 & — & 有誤差 \\
+標準 Fourier 反演 & 一維 & 複值 & 需取 Re 部分 \\
+VIX options Fourier & 二維 & 複值 & 更慢 \\
+Monte Carlo & — & — & 最慢 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+一維實值積分：快速、數值穩定、易實現。這是論文最主要的技術貢獻。
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{凸性修正的誤差分析（Section 2.3）}
+
+\subsection{什麼是凸性修正？}
+
+由 Jensen 不等式，對凸函數（如開根號）：
+\[
+  \E\!\left[\sqrt{aV_T+b}\right] < \sqrt{a\,\E[V_T]+b} = \sqrt{\E[\VIX_T^2]}
+\]
+
+VIX 期貨的公平價格\textbf{嚴格小於} $\sqrt{\E[\VIX_T^2]}$。兩者的差距叫做\textbf{凸性修正（convexity adjustment）}。
+
+\subsection{文獻中的近似方法}
+
+\textbf{Lin (2007)：}對 $\sqrt{x}$ 在 $\bar{x} = \E[\VIX_T^2]$ 附近做二階 Taylor 展開：
+\[
+  \sqrt{x} \approx \sqrt{\bar{x}} + \frac{1}{2\sqrt{\bar{x}}}(x-\bar{x})
+  - \frac{1}{8\bar{x}^{3/2}}(x-\bar{x})^2 + \cdots
+\]
+取期望後，用二階動差（方差）估計凸性修正項。
+
+\textbf{Zhang, Shu, Brenner (2010)：}延伸到三階展開，加入偏態（skewness）修正。
+
+\subsection{為什麼近似會失效？}
+
+\begin{keybox}
+圖 1（Figure 1）顯示：
+\begin{itemize}
+  \item 低波動率或短期合約：近似誤差可以忽略
+  \item \textbf{高波動率}（VIX > 30）或\textbf{遠期}合約：誤差超過 1--2 VIX 點
+  \item 2008 年金融海嘯期間（VIX 飆至 80+）：Taylor 近似完全失效
+\end{itemize}
+在實際交易中，1 VIX 點的誤差是非常顯著的。
+\end{keybox}
+
+\begin{physicsbox}
+\textbf{Taylor 展開的失效條件}
+
+Taylor 展開在展開點附近有效，但當：
+\begin{itemize}
+  \item $V_T$ 的分布很廣（高波動率 $\Rightarrow$ 分布的尾巴很厚）
+  \item 期限 $\tau$ 很長（不確定性更大）
+\end{itemize}
+展開就失效了。
+
+物理類比：用諧振子（拋物線勢阱）近似一個非線性勢阱，在小振幅時準確，大振幅時差很遠。
+\end{physicsbox}
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{實證研究（Section 3）}
+
+\subsection{資料}
+
+\begin{itemize}
+  \item \textbf{樣本期間}：2004/3/26（VIX 期貨推出）至 2008/12/31，共 1,194 個交易日
+  \item \textbf{資料}：每日 VIX 現貨 + CBOE 掛牌的各到期月 VIX 期貨結算價
+  \item \textbf{樣本涵蓋}：低波動期（2004--2006）、次貸危機（2007）、金融海嘯（2008）
+\end{itemize}
+
+\subsection{估計方法：MCMC}
+
+\begin{physicsbox}
+\textbf{MCMC = 在參數空間裡的布朗運動}
+
+你不知道哪組參數最好，但可以計算任意一組參數下的模型概似（likelihood）。MCMC（Markov Chain Monte Carlo）在參數空間裡做隨機遊走，停留時間與 posterior 機率成正比，最終採樣分布收斂到後驗分布 $p(\theta|\text{data})$。
+
+這篇論文用的是 Metropolis--Hastings 演算法，一種標準的 MCMC 方法。
+\end{physicsbox}
+
+\subsection{四個模型的比較結果}
+
+\begin{center}
+\begin{tabular}{lllll}
+\toprule
+模型 & 股價跳躍 & 方差跳躍 & VIX 期貨 RMSE & 備注 \\
+\midrule
+SV & & & 最大 & Heston (1993) \\
+SVJ & $\checkmark$ & & 有顯著改善 & \\
+SVVJ & & $\checkmark$ & 有改善 & \\
+SVJJ & $\checkmark$ & $\checkmark$ & 最小 & 但與 SVJ 接近 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{keybox}
+\textbf{四大實證發現：}
+\begin{enumerate}
+  \item \textbf{加入股價跳躍（SVJ）顯著改善定價}，尤其在 2007--2008 年高波動率期間。
+  \item \textbf{方差跳躍（$J^V$）的邊際貢獻有限}——SVJJ 比 SVJ 改善幅度不大。
+  \item \textbf{純隨機波動率（SV/Heston）對 VIX 期限結構的擬合已相當不錯}，在 2004--2006 年低波動期表現良好。
+  \item 估計的長期均值 $\hat\theta$ 約 0.04--0.06（對應年化波動率 $\sim$20--24\%），符合歷史 VIX 均值。
+\end{enumerate}
+\end{keybox}
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\section{物理視角總結}
+
+\subsection{概念對照表}
+
+\begin{center}
+\renewcommand{\arraystretch}{1.4}
+\begin{tabular}{p{4.8cm} p{4.8cm} p{4.2cm}}
+\toprule
+\textbf{物理概念} & \textbf{金融對應} & \textbf{論文位置} \\
+\midrule
+朗之萬方程式 & 隨機微分方程（SDE） & SVJJ 模型基礎 \\
+粒子在拋物線勢阱（CIR） & 均值回歸方差 $V_t$ & eq 4 \\
+Poisson 放射性衰變 & 市場崩潰跳躍 & $\dd J^S, \dd J^V$ \\
+諧振子時間平均線性 & $\VIX^2 = aV_t+b$ & eq 5，全文關鍵 \\
+配分函數 / 特徵函數 & $V_T$ 的 MGF & $\varphi = e^{C+DV+A}$，eq 10 \\
+Laplace 反演（一維實值） & VIX 期貨定價積分 & eq 8--9，主要貢獻 \\
+Hamilton--Jacobi / Riccati & $C, D$ 的 ODE & Appendix A \\
+Taylor 展開大振幅失效 & 凸性修正近似誤差 & Sec 2.3 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{論文的核心邏輯線}
+
+\begin{tcolorbox}[enhanced, colback=lightblue, colframe=physblue, arc=4pt, width=0.95\textwidth]
+\begin{enumerate}
+  \item \textbf{$\VIX_T^2 = aV_T + b$}（eq 5）\\
+  $\Rightarrow$ 問題化為計算 $\E[\sqrt{aV_T+b}]$
+
+  \vspace{0.3em}
+  \item \textbf{$\sqrt{x}$ 的 Laplace 積分表示}\\
+  $\Rightarrow$ $\E[\sqrt{aV_T+b}] = \int_0^\infty (\text{kernel})\cdot\E[e^{-uV_T}]\,\dd u$
+
+  \vspace{0.3em}
+  \item \textbf{$\E[e^{uV_T}] = $ Affine MGF = $e^{C+DV_t+A}$}（eq 10）\\
+  $\Rightarrow$ 被積函數有閉式表達
+
+  \vspace{0.3em}
+  \item \textbf{一維實值數值積分}\\
+  $\Rightarrow$ 快速、準確、易實現的 VIX 期貨定價公式
+\end{enumerate}
+\end{tcolorbox}
+
+\newpage
+
+% ════════════════════════════════════════════════════════════
+\appendix
+
+\section{數學補充：Riccati ODE 推導思路（Appendix A）}
+
+\subsection*{目標}
+
+求 $V_T$ 在 SVJJ 模型下的條件 MGF：
+\[
+  \varphi(u, V_t, \tau) = \E^\Q_t[e^{uV_T}],\quad \tau = T-t
+\]
+
+\subsection*{步驟一：假設 Affine 結構}
+
+設 MGF 具有指數仿射形式：
+\[
+  \varphi(u, V_t, \tau) = \exp\!\big(C(\tau,u) + D(\tau,u)\cdot V_t + A(\tau,u)\big)
+\]
+
+\subsection*{步驟二：Feynman--Kac 定理}
+
+$\varphi$ 滿足一個 PDE（由 Feynman--Kac 定理，SDE 解的期望值滿足偏微分方程）。把 Affine 假設代入後，PDE 自然分解成 ODE：
+
+\textbf{$D(\tau, u)$ 的 Riccati ODE：}
+\[
+  \frac{\partial D}{\partial\tau}
+  = \frac{1}{2}\sigma_V^2\,D^2 - \kappa^\Q\,D + \lambda^\Q\big(\psi^V(D)-1\big)
+\]
+（$\psi^V$ 是方差跳躍幅度的 MGF；精確係數見論文 eq 11）
+
+\textbf{邊界條件：}$D(0,u) = u$，$C(0,u) = 0$，$A(0,u) = 0$。
+
+\begin{physicsbox}
+\textbf{物理對應：Hamilton--Jacobi 方程}
+
+Riccati ODE 是量子力學 Hamilton--Jacobi 方程的類比。在量子諧振子中，傳播子的對數相位恰好滿足 Riccati 方程。Affine 模型可以理解為「有跳躍的量子諧振子金融版本」——跳躍讓動力學更複雜，但線性代數結構保留了（半）閉式解。
+\end{physicsbox}
+
+\subsection*{無跳躍時（純 Heston）的解析解}
+
+當 $\lambda=0$，Riccati ODE 的解是解析的（熟悉 Heston 選擇權定價的讀者應不陌生）：
+\[
+  D(\tau, u)
+  = \frac{u\,e^{-\kappa^\Q\tau}}{1 - \dfrac{\sigma_V^2 u}{2\kappa^\Q}\!\left(1-e^{-\kappa^\Q\tau}\right)}
+\]
+
+加入跳躍後通常無解析解，需要數值 ODE solver——計算量仍遠小於 Monte Carlo。
+
+\end{document}
